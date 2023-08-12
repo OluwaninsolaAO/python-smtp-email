@@ -10,7 +10,7 @@ SMTP_USERNAME = getenv('SMTP_USERNAME')
 SMTP_PASSWORD = getenv('SMTP_PASSWORD')
 SMTP_SERVER = getenv('SMTP_SERVER')
 sender = SMTP_USERNAME
-recipient = 'olagunjusola070@gmail.com'
+recipient = 'wisdomsays.g@gmail.com'
 
 message = MIMEMultipart()
 message['From'] = 'iProjectEdu <{}>'.format(sender)
