@@ -3,6 +3,7 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
+from typing import Callable, Iterable
 
 
 class EmailSender:
@@ -30,13 +31,16 @@ class EmailSender:
         # validate To
         if To is None and hasattr(user, 'email'):
             message['To'] = getattr(user, 'email')
+        elif To is None and isinstance(user, dict):
+            if user.get('email', None):
+                message['To'] = user.get('email')
         elif To is not None:
             message['To'] = To
         else:
             return None
 
         if all([hasattr(self, 'header'), hasattr(self, 'footer')]):
-            body = self.header + body + self.footer
+            body = str(self.header) + body + str(self.footer)
         message.attach(MIMEText(body, content_type))
         return message
 
@@ -55,3 +59,22 @@ class EmailSender:
             server.sendmail(message.get('From'), message.get('To'),
                             message.as_string())
         return True
+
+    def send_multiple(self, From: str = None, users: Iterable = None,
+                      make_subject: Callable = None,
+                      make_body: Callable = None,
+                      content_type='plain'):
+        """Overload and send email to multiple recipients"""
+        with smtplib.SMTP(self.smpt_server, self.smtp_port) as server:
+            server.starttls()
+            server.login(self.username, self.password)
+            for user in users:
+                message = self.make_message(From=From, user=user,
+                                            Subject=make_subject(user),
+                                            body=make_body(user),
+                                            content_type=content_type)
+                if message is not None:
+                    server.sendmail(message.get('From'),
+                                    message.get('To'),
+                                    message.as_string())
+                    print('Sent: {}'.format(message.get('To')))
